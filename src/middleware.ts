@@ -8,6 +8,7 @@ const { auth } = NextAuth(authConfig); // Check
 export async function middleware(request: NextRequest) {
     //const token = await getToken({ req: request }); // TODO, check why getToken is giving problem.
     const session = await auth();
+    console.log(session);
     const url = request.nextUrl;
 
     if (session && (

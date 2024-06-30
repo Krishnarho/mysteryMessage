@@ -1,5 +1,6 @@
 import dbConnect from "@/lib/dbConnect"
 import UserModel from "@/model/User";
+import { response } from "@/utils/response";
 import { z } from "zod";
 
 
@@ -12,13 +13,7 @@ export async function POST(request: Request) {
         const user = await UserModel.findOne({ username: decoderUsername });
 
         if (!user) {
-            return Response.json(
-                {
-                    success: false,
-                    message: "User not found"
-                },
-                { status: 404 }
-            )
+            return response(false, "User not found", 404);
         }
 
         const isCodeValid = user.verifyCode === code;
@@ -29,35 +24,16 @@ export async function POST(request: Request) {
             user.isVerified = true;
             await user.save();
 
-            return Response.json(
-                { success: true, message: 'Account verified successfully' },
-                { status: 200 }
-            );
+            return response(true, "Account verified successfully", 200);
         } else if (!isCodeNotExpired) {
             // Code has expired
-            return Response.json(
-                {
-                    success: false,
-                    message:
-                        'Verification code has expired. Please sign up again to get a new code.',
-                },
-                { status: 400 }
-            );
+            return response(false, "Verification code has expired. Please sign up again to get a new code.", 400);
         } else {
             // Code is incorrect
-            return Response.json(
-                { success: false, message: 'Incorrect verification code' },
-                { status: 400 }
-            );
+            return response(false, "Incorrect verification code", 400);
         }
     } catch (error) {
         console.error("Error checking verify code:", error)
-        return Response.json(
-            {
-                success: false,
-                message: "Error checking verify code"
-            },
-            { status: 500 }
-        )
+        return response(false, "Error checking verify code", 500);
     }
 }
