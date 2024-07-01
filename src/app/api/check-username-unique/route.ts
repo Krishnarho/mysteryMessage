@@ -36,7 +36,7 @@ export async function GET(request: Request) {
             //console.log(existingVerifiedUser);
             return response(false, "Username is already taken", 409);
         }
-        return response(false, "Username is unique", 200);
+        return response(true, "Username is unique", 200);
 
     } catch (error) {
         console.error("Error checking username:", error)
