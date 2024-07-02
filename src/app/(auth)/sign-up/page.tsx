@@ -44,20 +44,20 @@ const SignUpForm = () => {
 
     useEffect(() => { // Using debounced to check if username is unique
         const checkUniqueUsername = async () => {
-
-            setIsCheckingUsername(true);
-            setUsernameMessage(""); //Reset message
-            try {
-                const response = await axios.get<ApiResponse>(`/api/check-username-unique?username=${username}`);
-                console.log(response); // Check not showing in console??
-                setUsernameMessage(response.data.message);
-            } catch (error) {
-                const axiosError = error as AxiosError<ApiResponse>;
-                setUsernameMessage(axiosError.response?.data.message ?? 'Error checking username')
-            } finally {
-                setIsCheckingUsername(false);
+            if (username) {
+                setIsCheckingUsername(true);
+                setUsernameMessage(""); //Reset message
+                try {
+                    const response = await axios.get<ApiResponse>(`/api/check-username-unique?username=${username}`);
+                    console.log(response); // Check not showing in console??
+                    setUsernameMessage(response.data.message);
+                } catch (error) {
+                    const axiosError = error as AxiosError<ApiResponse>;
+                    setUsernameMessage(axiosError.response?.data.message ?? 'Error checking username')
+                } finally {
+                    setIsCheckingUsername(false);
+                }
             }
-
         }
 
         checkUniqueUsername();
