@@ -1,15 +1,19 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import dbConnect from "./lib/dbConnect";
-import UserModel from "./model/User";
+import dbConnect from "@/lib/dbConnect";
+import UserModel from "@/model/User";
 import bcrypt from "bcryptjs";
+import { authConfig } from "@/auth.config";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+    ...authConfig,
     providers: [
         CredentialsProvider({
+            id: 'credentials',
+            name: 'Credentials',
             credentials: {
-                email: {},
-                password: {},
+                email: { label: 'Email', type: 'text' },
+                password: { label: 'Password', type: 'password' },
             },
             authorize: async (credentials: any): Promise<any> => {
                 await dbConnect();
@@ -17,12 +21,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 try {
                     const user = await UserModel.findOne({
                         $or: [
-                            { email: credentials?.email },
-                            { username: credentials?.username }
+                            { email: credentials.identifier },
+                            { username: credentials.identifier }
                         ]
                     }).lean();
-                    console.log(user);
-
+                    console.log("authJs:: ", user);
                     if (!user) {
                         throw new Error("No user found with this Email");
                     }
@@ -30,14 +33,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                         throw new Error('Please verify your account before logging in');
                     }
 
-                    const isPasswordCorrect = await bcrypt.compare(user.password, credentials.password);
-                    if (!isPasswordCorrect) {
-                        throw new Error("Incorrect Password entered");
-                    } else {
+                    const isPasswordCorrect = await bcrypt.compare(credentials.password, user.password); // form data first and the db data next. Else wont work
+
+                    if (isPasswordCorrect) {
                         return user;
+                    } else {
+                        throw new Error('Incorrect password');
                     }
                 } catch (err: any) {
-                    throw new Error(err)
+                    throw new Error(err.message);
                 }
             },
         }),
@@ -61,9 +65,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             }
             return session;
         },
-    },
-    session: {
-        strategy: "jwt",
     },
     secret: process.env.AUTH_SECRET,
     pages: {

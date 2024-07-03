@@ -1,14 +1,14 @@
 import { getToken } from "next-auth/jwt";
 import { NextRequest, NextResponse } from "next/server";
-import { authConfig } from "./auth.config";
 import NextAuth from "next-auth";
+import { authConfig } from "./auth.config";
 
-const { auth } = NextAuth(authConfig); // Check
+const { auth } = NextAuth(authConfig); // Done see auth.config.ts
 
 export async function middleware(request: NextRequest) {
-    //const token = await getToken({ req: request }); // TODO, check why getToken is giving problem.
+    //const token = await getToken({ req: request }); // Dont use this function instead use universal auth() as per Auth docs.
     const session = await auth();
-    console.log(session);
+    //console.log("middleware:: ", session);
     const url = request.nextUrl;
 
     if (session && (
@@ -25,7 +25,5 @@ export async function middleware(request: NextRequest) {
 };
 
 export const config = {
-    matcher: [
-        '/sign-in', '/dashboard/:path*'
-    ]
+    matcher: ['/dashboard/:path*', '/sign-in', '/sign-up', '/', '/verify/:path*'],
 }

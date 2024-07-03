@@ -9,7 +9,7 @@ import axios, { AxiosError } from 'axios'
 
 import { SignUpSchema } from "@/schemas/signUpSchema"
 import { ApiResponse } from "@/types/ApiResponse"
-import { toast } from "@/components/ui/use-toast"
+import { useToast } from "@/components/ui/use-toast"
 
 import {
     Form,
@@ -32,6 +32,7 @@ const SignUpForm = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const debounced = useDebounceCallback(setUsername, 500);
     const router = useRouter();
+    const { toast } = useToast();
 
     const form = useForm<z.infer<typeof SignUpSchema>>({
         resolver: zodResolver(SignUpSchema),

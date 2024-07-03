@@ -9,14 +9,15 @@ import { useForm } from 'react-hook-form';
 import * as z from "zod";
 
 
-import { Form, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 
 const VerifyAccount = () => {
     const params = useParams<{ username: string }>();
     const router = useRouter();
+    const { toast } = useToast();
     const form = useForm<z.infer<typeof VerifySchema>>({
         resolver: zodResolver(VerifySchema)
     });
@@ -59,12 +60,14 @@ const VerifyAccount = () => {
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                         <FormField
-                            name="code"
                             control={form.control}
+                            name="code"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Verification Code</FormLabel>
-                                    <Input {...field} />
+                                    <FormLabel>Email</FormLabel>
+                                    <FormControl>
+                                        <Input {...field} />
+                                    </FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}
