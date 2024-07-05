@@ -4,6 +4,8 @@ import dbConnect from "@/lib/dbConnect";
 import UserModel from "@/model/User";
 import bcrypt from "bcryptjs";
 import { authConfig } from "@/auth.config";
+import { redirect } from "next/navigation";
+import { NextResponse } from "next/server";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
     ...authConfig,
@@ -19,27 +21,28 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 await dbConnect();
 
                 try {
-                    const user = await UserModel.findOne({
+                    const userLogged = await UserModel.findOne({
                         $or: [
                             { email: credentials.identifier },
                             { username: credentials.identifier }
                         ]
                     }).lean();
-                    console.log("authJs:: ", user);
-                    if (!user) {
-                        throw new Error("No user found with this Email");
-                    }
-                    if (!user.isVerified) {
-                        throw new Error('Please verify your account before logging in');
+                    //console.log("authJs:: ", user);
+                    if (!userLogged) {
+                        return null
                     }
 
-                    const isPasswordCorrect = await bcrypt.compare(credentials.password, user.password); // form data first and the db data next. Else wont work
+                    if (!userLogged.isVerified) {
+                        throw Error('Please verify your account first'); // TODO
+                    }
+
+                    const isPasswordCorrect = await bcrypt.compare(credentials.password, userLogged.password); // form data first and the db data next. Else wont work
 
                     if (isPasswordCorrect) {
-                        return user;
-                    } else {
-                        throw new Error('Incorrect password');
+                        return userLogged;
                     }
+
+                    return null
                 } catch (err: any) {
                     throw new Error(err.message);
                 }
@@ -48,6 +51,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     ],
     callbacks: {
         async jwt({ token, user }) {
+            //console.log("Token: ", token);
             if (user) {
                 token._id = user._id?.toString(); // Convert ObjectId to string
                 token.isVerified = user.isVerified;

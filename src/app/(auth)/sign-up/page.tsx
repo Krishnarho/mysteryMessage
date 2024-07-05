@@ -24,6 +24,8 @@ import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { FormError } from "@/components/form-error"
+import { FormSuccess } from "@/components/form-succes"
 
 const SignUpForm = () => {
     const [username, setUsername] = useState('');
@@ -161,6 +163,8 @@ const SignUpForm = () => {
                                 </FormItem>
                             )}
                         />
+                        <FormError message="" />
+                        <FormSuccess message="" />
                         <Button type="submit" className='w-full' disabled={isSubmitting}>
                             {isSubmitting ? (
                                 <>

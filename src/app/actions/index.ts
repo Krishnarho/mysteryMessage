@@ -1,8 +1,11 @@
 'use server'
 
 import { signIn, signOut } from "@/auth";
+import UserModel from "@/model/User";
+import { DEFAULT_LOGIN_REDIRECT } from "@/routesAnt";
 import { SignInSchema } from "@/schemas/signInSchema";
 import { AuthError } from "next-auth";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 
 // export async function doSocialLogin(data:z.infer<typeof SignInSchema>) {
@@ -11,20 +14,33 @@ import { z } from "zod";
 // }
 
 export async function doCredentialLogin(data: z.infer<typeof SignInSchema>) {
-    //const toast = useToast();
+
+    const existingUser = await UserModel.findOne({
+        $or: [
+            { email: data.identifier },
+            { username: data.identifier }
+        ]
+    }).lean();
+    if (existingUser === null) {
+        return { error: "User not found." }
+    }
+
+    if (existingUser && !existingUser.isVerified) {
+        redirect(`/verify/${existingUser.username}`);
+    }
+
     try {
-        const response = await signIn("credentials", {
-            redirect: false,
+        await signIn("credentials", {
+            redirectTo: DEFAULT_LOGIN_REDIRECT,
             identifier: data.identifier,
             password: data.password,
         });
 
-        return response;
     } catch (error) {
         if (error instanceof AuthError) {
             switch (error.type) {
-                case "CredentialsSignin": {
-                    return { error: "Invalid credentials" }
+                case "CredentialsSignin": { //This works in beta.18 only. Check updates on 19
+                    return { error: "Invalid credentials!" }
                 }
                 default: {
                     return { error: "Something went wrong" }

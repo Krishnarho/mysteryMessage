@@ -1,6 +1,6 @@
 'use client'
 
-import { signIn } from 'next-auth/react';
+import { signIn } from '@/auth';
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -11,10 +11,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { FormError } from '@/components/form-error';
+import { FormSuccess } from '@/components/form-succes';
+import { useState, useTransition } from 'react';
+import { doCredentialLogin } from '@/app/actions';
 
 function SignInForm() {
+    const [error, setError] = useState<string | undefined>(undefined);
+    const [success, setSuccess] = useState<string | undefined>(undefined);
+    const [isPending, startTransition] = useTransition();
     const router = useRouter();
     const { toast } = useToast();
+
     const form = useForm<z.infer<typeof SignInSchema>>({
         resolver: zodResolver(SignInSchema),
         defaultValues: {
@@ -23,32 +31,18 @@ function SignInForm() {
         }
     });
 
-    const onSubmit = async (data: z.infer<typeof SignInSchema>) => {
-        const result = await signIn('credentials', {
-            redirect: false,
-            identifier: data.identifier,
-            password: data.password,
-        });
-        console.log(result);
-        if (result?.error) {
-            if (result.error === 'CredentialsSignin') {
-                toast({
-                    title: 'Login Failed',
-                    description: 'Incorrect username or password',
-                    variant: 'destructive',
-                });
-            } else {
-                toast({
-                    title: 'Error',
-                    description: result.error,
-                    variant: 'destructive',
-                });
-            }
-        }
+    const onSubmit = (data: z.infer<typeof SignInSchema>) => { // TODO Schemas properties does not appear in sign-in UI page
+        setError("");
+        setSuccess("");
 
-        if (result?.url) {
-            router.replace('/dashboard');
-        }
+        startTransition(() => {
+            doCredentialLogin(data)
+                .then((res) => {
+                    setError(res?.error);
+                    //setSuccess(res?.success) // The DoCredential fn only returns error. Success is not needed as of now..
+                })
+        })
+
     };
 
     return (
@@ -61,7 +55,7 @@ function SignInForm() {
                     <p className="mb-4">Sign in to continue your secret conversations</p>
                 </div>
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                         <FormField
                             control={form.control}
                             name="identifier"
@@ -88,6 +82,8 @@ function SignInForm() {
                                 </FormItem>
                             )}
                         />
+                        <FormError message={error} />
+                        <FormSuccess message={success} />
                         <Button className='w-full' type="submit">Sign In</Button>
                     </form>
                 </Form>

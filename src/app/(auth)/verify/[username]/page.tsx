@@ -13,6 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 const VerifyAccount = () => {
     const params = useParams<{ username: string }>();
@@ -75,6 +76,10 @@ const VerifyAccount = () => {
                         <Button type="submit" className='w-full'>Verify</Button>
                     </form>
                 </Form>
+                <Link
+                    href={'/sign-up'}
+                    className='block text-center text-xs underline text-blue-700'
+                >Sign Up</Link>
             </div>
         </div>
     )
